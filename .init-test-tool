@@ -1,0 +1,4 @@
+{
+    "command": "npm run test",
+    "working_directory": "/home/kavia/workspace/code-generation/stockexplorer-16106-9f655f49/stock_explorer"
+}
