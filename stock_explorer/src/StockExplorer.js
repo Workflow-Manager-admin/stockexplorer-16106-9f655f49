@@ -5,9 +5,8 @@ import React, { useState } from "react";
  * StockExplorer - Main container for stock search, info, and chart.
  * Uses color scheme: #1a237e (primary), #f5f5f5 (secondary), #ffb300 (accent).
  * 
- * All-in-one component as per assignment. This code fetches real stock data 
- * from Yahoo Finance (via public APIs), but for a real app, 
- * production-grade backend API proxy is recommended.
+ * All-in-one component as per assignment. This code now fetches stock data 
+ * via a backend FastAPI proxy at http://localhost:8000/api/stock/{ticker}, removing all legacy Yahoo fetches.
  */
 
 const COLORS = {
