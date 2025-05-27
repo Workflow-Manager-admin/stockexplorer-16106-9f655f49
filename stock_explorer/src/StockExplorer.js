@@ -50,7 +50,7 @@ function StockInfoCard({ stockInfo }) {
           <span style={{
             fontWeight: 400, fontSize: 16, color: COLORS.accent, marginLeft: 10,
           }}>
-            [{stockInfo.symbol}]
+            [{stockInfo.ticker}]
           </span>
         </div>
         {stockInfo.sector && (
@@ -84,7 +84,8 @@ function StockInfoCard({ stockInfo }) {
         minWidth: 130,
       }}>
         <div style={{ fontSize: 28, fontWeight: 700, color: "#333" }}>
-          ${stockInfo.regularMarketPrice?.toFixed(2) ?? "--"}
+          ${stockInfo.regularMarketPrice !== null && stockInfo.regularMarketPrice !== undefined
+            ? stockInfo.regularMarketPrice.toFixed(2) : "--"}
         </div>
         <div style={{
           color: stockInfo.regularMarketChangePercent > 0
@@ -96,10 +97,12 @@ function StockInfoCard({ stockInfo }) {
           fontSize: 14,
           marginTop: 2
         }}>
-          {stockInfo.regularMarketChangePercent !== undefined &&
+          {stockInfo.regularMarketChangePercent !== undefined && stockInfo.regularMarketChangePercent !== null &&
             (stockInfo.regularMarketChangePercent > 0 ? "▲ " :
               stockInfo.regularMarketChangePercent < 0 ? "▼ " : "")}
-          {stockInfo.regularMarketChangePercent?.toFixed(2) ?? "--"}%
+          {stockInfo.regularMarketChangePercent !== undefined && stockInfo.regularMarketChangePercent !== null
+            ? stockInfo.regularMarketChangePercent.toFixed(2)
+            : "--"}%
         </div>
         {stockInfo.marketCap && (
           <div style={{ fontSize: 13, marginTop: 6 }}>
