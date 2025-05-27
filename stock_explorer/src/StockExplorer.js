@@ -253,62 +253,39 @@ function StockExplorer() {
     }
 
     let isCancelled = false;
-    async function fetchAll() {
+    async function fetchStockFromBackend() {
       setLoading(true);
       setError("");
       setStockInfo(null);
       setHistory([]);
-      // Yahoo Finance API: (for demonstration) - real apps should proxy to avoid CORS and quota
       try {
-        // 1. Quote/Profile
-        // Proxy Yahoo API calls using public CORS proxy (temporary workaround for browser CORS)
-        const corsProxy = "https://corsproxy.io/?url=";
-        const quoteUrl = `${corsProxy}https://query1.finance.yahoo.com/v10/finance/quoteSummary/${query}?modules=price,assetProfile`;
-        const res = await fetch(quoteUrl);
-        if (!res.ok) throw new Error("Not found or rate limited.");
-        const data = await res.json();
-        const priceData = data.quoteSummary?.result?.[0]?.price || {};
-        const profile = data.quoteSummary?.result?.[0]?.assetProfile || {};
-        const combined = { ...priceData, ...profile, symbol: query.toUpperCase() };
-        setStockInfo(combined);
-
-        // 2. Historical price
-        const { value, interval } = timeframe;
-        // Calculate unix timestamps for range
-        const now = Math.floor(Date.now() / 1000);
-        let period1;
-        if (value === "1d") period1 = now - 2 * 24 * 60 * 60;
-        else if (value === "1mo") period1 = now - 31 * 24 * 60 * 60;
-        else if (value === "6mo") period1 = now - 182 * 24 * 60 * 60;
-        else if (value === "1y") period1 = now - 366 * 24 * 60 * 60;
-        else period1 = now - 30 * 24 * 60 * 60;
-
-        const chartUrl = `${corsProxy}https://query1.finance.yahoo.com/v8/finance/chart/${query}?interval=${interval}&period1=${period1}&period2=${now}`;
-        const chartRes = await fetch(chartUrl);
-        const chartData = await chartRes.json();
-        if (!chartData.chart?.result?.length) throw new Error("No chart data.");
-        const candle = chartData.chart.result[0];
-        const timestamps = candle.timestamp || [];
-        const closes = candle.indicators?.quote?.[0]?.close || [];
-        // Build history data: [{date, close}]
-        const hist = [];
-        for (let i = 0; i < timestamps.length; i++)
-          if (closes[i] !== null && !isNaN(closes[i]))
-            hist.push({
-              date: timestamps[i] * 1000,
-              close: closes[i],
-            });
-        setHistory(hist);
+        // Only fetch the main company/price info from backend;
+        // TODO: If backend supports chart, update this in the future
+        const apiUrl = `http://localhost:8000/api/stock/${encodeURIComponent(query)}`;
+        const res = await fetch(apiUrl);
+        if (!res.ok) {
+          if (res.status === 404) {
+            throw new Error("Ticker not found.");
+          } else {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(errData.detail || "Unknown error.");
+          }
+        }
+        const stock = await res.json();
+        if (!isCancelled) {
+          setStockInfo(stock);
+        }
+        // Backend does not supply historical chart; set history empty to keep UI consistent
+        setHistory([]);
       } catch (err) {
-        setError("Could not fetch stock data.");
+        setError("Could not fetch stock data" + (err && err.message ? `: ${err.message}` : "."));
         setStockInfo(null);
         setHistory([]);
       }
       setLoading(false);
     }
-    fetchAll();
+    fetchStockFromBackend();
     return () => { isCancelled = true; };
-    // only change when query or timeframe
     // eslint-disable-next-line
   }, [query, timeframe]);
 
@@ -468,6 +445,7 @@ function StockExplorer() {
 
         {/* Interactive chart */}
         {stockInfo && !loading && (
+          // Chart will display "No chart data found." until backend is extended to support chart history data.
           <PriceChart data={history} timeframe={timeframe} height={230} />
         )}
 
