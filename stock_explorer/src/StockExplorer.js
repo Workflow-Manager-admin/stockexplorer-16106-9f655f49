@@ -259,7 +259,10 @@ function StockExplorer() {
       // Yahoo Finance API: (for demonstration) - real apps should proxy to avoid CORS and quota
       try {
         // 1. Quote/Profile
-        const res = await fetch(`https://query1.finance.yahoo.com/v10/finance/quoteSummary/${query}?modules=price,assetProfile`);
+        // Proxy Yahoo API calls using public CORS proxy (temporary workaround for browser CORS)
+        const corsProxy = "https://corsproxy.io/?url=";
+        const quoteUrl = `${corsProxy}https://query1.finance.yahoo.com/v10/finance/quoteSummary/${query}?modules=price,assetProfile`;
+        const res = await fetch(quoteUrl);
         if (!res.ok) throw new Error("Not found or rate limited.");
         const data = await res.json();
         const priceData = data.quoteSummary?.result?.[0]?.price || {};
@@ -277,7 +280,8 @@ function StockExplorer() {
         else if (value === "6mo") period1 = now - 182 * 24 * 60 * 60;
         else if (value === "1y") period1 = now - 366 * 24 * 60 * 60;
         else period1 = now - 30 * 24 * 60 * 60;
-        const chartUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${query}?interval=${interval}&period1=${period1}&period2=${now}`;
+
+        const chartUrl = `${corsProxy}https://query1.finance.yahoo.com/v8/finance/chart/${query}?interval=${interval}&period1=${period1}&period2=${now}`;
         const chartRes = await fetch(chartUrl);
         const chartData = await chartRes.json();
         if (!chartData.chart?.result?.length) throw new Error("No chart data.");
